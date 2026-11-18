@@ -1,9 +1,15 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>聖誕許願箱</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chocolate+Classical+Sans&display=swap">
 <style>
+[hidden] { display: none !important; }
+
 /* Layout: a deep-green band on top (light string, hanging name tags, title, tree, falling snow), then a pale page with two panels edged in wrapping-paper stripes, and a green footer band with small decorations. */
 :root {
   --bg: #F6FAF7;
@@ -174,7 +180,8 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
   @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
 }
 </style>
-
+</head>
+<body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
   <defs>
     <symbol id="s-tree" viewBox="0 0 120 150">
@@ -333,352 +340,377 @@ textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; 
   </div>
 </footer>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, collection, onSnapshot, runTransaction, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+/* ===== 只需要改這裡：貼上你的 Firebase 網頁應用程式設定 ===== */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID"
+};
+/* ============================================================ */
+
+const TOTAL = 3;
+const SLOTS = ['w1', 'w2', 'w3'];
+const $ = (id) => document.getElementById(id);
+
+/* falling snow in the top band */
 (function () {
-  'use strict';
-  (function () {
-    var box = document.getElementById('snow');
-    if (!box) return;
-    for (var i = 0; i < 22; i++) {
-      var f = document.createElement('i');
-      f.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
-      f.style.setProperty('--y', (Math.random() * 90).toFixed(1) + '%');
-      f.style.setProperty('--s', (3 + Math.random() * 5).toFixed(1) + 'px');
-      f.style.setProperty('--t', (7 + Math.random() * 8).toFixed(1) + 's');
-      f.style.setProperty('--d', (-Math.random() * 12).toFixed(1) + 's');
-      box.append(f);
-    }
-  })();
-
-  var TOTAL = 3;
-  var $ = function (id) { return document.getElementById(id); };
-
-  var WANT_TYPES = ['零食甜點', '茶飲咖啡', '生活小物', '文具手帳', '衣物配件', '保養美妝', '香氛蠟燭', '玩具公仔', '書籍', '3C 周邊', '運動戶外', '廚房餐具', '票券體驗'];
-  var AVOID_TYPES = ['食物飲料', '衣物鞋子', '保養美妝', '香氛蠟燭', '整人玩具', '需要組裝', '體積太大', '紀念擺飾', '禮券或現金'];
-  var COLORS = [
-    ['黑', '#141414'], ['白', '#FFFFFF'], ['灰', '#8A8F94'], ['紅', '#D6283B'],
-    ['粉紅', '#F28AB2'], ['橘', '#F58A1F'], ['黃', '#F4C20D'], ['綠', '#2E9E57'],
-    ['藍', '#2F6FD0'], ['紫', '#8348C9'], ['棕', '#7A4B2A'], ['金銀', 'linear-gradient(135deg,#D9B44A,#C9CCD1)']
-  ];
-  var COLOR_MAP = {};
-  COLORS.forEach(function (c) { COLOR_MAP[c[0]] = c[1]; });
-
-  function h(tag, cls, text) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
+  const box = $('snow');
+  if (!box) return;
+  for (let i = 0; i < 22; i++) {
+    const f = document.createElement('i');
+    f.style.setProperty('--x', (Math.random() * 100).toFixed(1) + '%');
+    f.style.setProperty('--y', (Math.random() * 90).toFixed(1) + '%');
+    f.style.setProperty('--s', (3 + Math.random() * 5).toFixed(1) + 'px');
+    f.style.setProperty('--t', (7 + Math.random() * 8).toFixed(1) + 's');
+    f.style.setProperty('--d', (-Math.random() * 12).toFixed(1) + 's');
+    box.append(f);
   }
-  function arr(x) { return Array.isArray(x) ? x.filter(function (s) { return typeof s === 'string'; }) : []; }
-  function str(x) { return typeof x === 'string' ? x : ''; }
-  function rand(n) { var a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
-  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+})();
 
-  function mkChips(el, name, items, colored) {
-    items.forEach(function (it, i) {
-      var label = colored ? it[0] : it;
-      var lab = h('label', 'chip');
-      var inp = document.createElement('input');
-      inp.type = 'checkbox'; inp.name = name; inp.value = label; inp.id = name + '-' + i;
-      var sp = h('span', colored ? 'sw' : '', label);
-      if (colored) sp.style.setProperty('--c', it[1]);
-      lab.append(inp, sp);
-      el.append(lab);
-    });
-  }
-  mkChips($('wantTypes'), 'want', WANT_TYPES, false);
-  mkChips($('avoidTypes'), 'avoidT', AVOID_TYPES, false);
-  mkChips($('avoidColors'), 'avoidC', COLORS, true);
+const WANT_TYPES = ['零食甜點', '茶飲咖啡', '生活小物', '文具手帳', '衣物配件', '保養美妝', '香氛蠟燭', '玩具公仔', '書籍', '3C 周邊', '運動戶外', '廚房餐具', '票券體驗'];
+const AVOID_TYPES = ['食物飲料', '衣物鞋子', '保養美妝', '香氛蠟燭', '整人玩具', '需要組裝', '體積太大', '紀念擺飾', '禮券或現金'];
+const COLORS = [
+  ['黑', '#141414'], ['白', '#FFFFFF'], ['灰', '#8A8F94'], ['紅', '#D6283B'],
+  ['粉紅', '#F28AB2'], ['橘', '#F58A1F'], ['黃', '#F4C20D'], ['綠', '#2E9E57'],
+  ['藍', '#2F6FD0'], ['紫', '#8348C9'], ['棕', '#7A4B2A'], ['金銀', 'linear-gradient(135deg,#D9B44A,#C9CCD1)']
+];
+const COLOR_MAP = {};
+COLORS.forEach((c) => { COLOR_MAP[c[0]] = c[1]; });
 
-  ['want', 'avoid'].forEach(function (k) {
-    var ta = $(k + 'Note');
-    ta.addEventListener('input', function () { $(k + 'Count').textContent = ta.value.length; });
+function h(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+const arr = (x) => (Array.isArray(x) ? x.filter((s) => typeof s === 'string') : []);
+const str = (x) => (typeof x === 'string' ? x : '');
+function rand(n) { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] % n; }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const fail = (tag) => Object.assign(new Error(tag), { tag });
+
+function mkChips(el, name, items, colored) {
+  items.forEach((it, i) => {
+    const label = colored ? it[0] : it;
+    const lab = h('label', 'chip');
+    const inp = document.createElement('input');
+    inp.type = 'checkbox'; inp.name = name; inp.value = label; inp.id = name + '-' + i;
+    const sp = h('span', colored ? 'sw' : '', label);
+    if (colored) sp.style.setProperty('--c', it[1]);
+    lab.append(inp, sp);
+    el.append(lab);
   });
+}
+mkChips($('wantTypes'), 'want', WANT_TYPES, false);
+mkChips($('avoidTypes'), 'avoidT', AVOID_TYPES, false);
+mkChips($('avoidColors'), 'avoidC', COLORS, true);
 
-  function checked(name) {
-    return Array.prototype.map.call(document.querySelectorAll('input[name="' + name + '"]:checked'), function (i) { return i.value; });
+['want', 'avoid'].forEach((k) => {
+  const ta = $(k + 'Note');
+  ta.addEventListener('input', () => { $(k + 'Count').textContent = ta.value.length; });
+});
+
+function checked(name) {
+  return Array.prototype.map.call(document.querySelectorAll('input[name="' + name + '"]:checked'), (i) => i.value);
+}
+function fillForm(d) {
+  const w = (d && d.want) || {}, a = (d && d.avoid) || {};
+  function setChecks(name, vals) {
+    document.querySelectorAll('input[name="' + name + '"]').forEach((i) => { i.checked = vals.indexOf(i.value) >= 0; });
   }
-  function fillForm(d) {
-    var w = (d && d.want) || {}, a = (d && d.avoid) || {};
-    function setChecks(name, vals) {
-      Array.prototype.forEach.call(document.querySelectorAll('input[name="' + name + '"]'), function (i) { i.checked = vals.indexOf(i.value) >= 0; });
+  setChecks('want', arr(w.types));
+  setChecks('avoidT', arr(a.types));
+  setChecks('avoidC', arr(a.colors));
+  $('wantNote').value = str(w.note);
+  $('avoidNote').value = str(a.note);
+  $('wantCount').textContent = $('wantNote').value.length;
+  $('avoidCount').textContent = $('avoidNote').value.length;
+}
+
+/* ---------- wish view ---------- */
+function pills(items, colored) {
+  const box = h('div', 'chips');
+  items.forEach((t) => {
+    const p = h('span', 'pill' + (colored ? ' sw' : ''), t);
+    if (colored && COLOR_MAP[t]) p.style.setProperty('--c', COLOR_MAP[t]);
+    box.append(p);
+  });
+  return box;
+}
+function wishView(d) {
+  const w = (d && d.want) || {}, a = (d && d.avoid) || {};
+  const root = h('div', 'wv');
+  const s1 = h('section', 'wv-sec');
+  s1.append(h('h3', null, '想要的'));
+  const wt = arr(w.types);
+  if (wt.length) s1.append(pills(wt, false));
+  if (str(w.note)) s1.append(h('p', 'wv-note', str(w.note)));
+  if (!wt.length && !str(w.note)) s1.append(h('p', 'none', '沒有特別指定'));
+  const s2 = h('section', 'wv-sec avoid');
+  s2.append(h('h3', null, '不想收到的'));
+  const at = arr(a.types), ac = arr(a.colors);
+  if (at.length) s2.append(pills(at, false));
+  if (ac.length) s2.append(pills(ac, true));
+  if (str(a.note)) s2.append(h('p', 'wv-note', str(a.note)));
+  if (!at.length && !ac.length && !str(a.note)) s2.append(h('p', 'none', '沒有特別排除'));
+  root.append(s1, s2);
+  return root;
+}
+
+/* ---------- state ---------- */
+let db = null, uid = null, userRef = null;
+let access = 'checking';   // checking | noconfig | ok
+let problem = '';
+let wishes = new Map(), claims = new Map(), profile = {};
+const seen = { w: false, c: false, p: false };
+let editing = false, busy = false, justDrew = false, timedOut = false;
+const keys = { summary: null, result: null };
+
+const ready = () => seen.w && seen.c && seen.p;
+function myWish() { return profile.wid && wishes.has(profile.wid) ? wishes.get(profile.wid) : null; }
+function setMsg(el, text, err) { el.textContent = text || ''; el.className = 'msg' + (err ? ' err' : ''); }
+function setPips(el, n) {
+  el.textContent = '';
+  for (let i = 0; i < TOTAL; i++) el.append(h('span', 'pip' + (i < n ? ' on' : '')));
+}
+function explain(e, fallback) {
+  if (e && e.code === 'permission-denied') return '資料庫規則拒絕了這個動作。請確認已照 README 貼上並發布 Firestore 規則。';
+  return fallback;
+}
+
+function render() {
+  const n = wishes.size, nd = claims.size;
+  setPips($('pipsWish'), n); setPips($('pipsDraw'), nd);
+  $('cntWish').textContent = n + ' / ' + TOTAL;
+  $('cntDraw').textContent = nd + ' / ' + TOTAL;
+
+  const notice = $('notice');
+  notice.hidden = false;
+  if (access === 'noconfig') notice.textContent = '還沒填入 Firebase 設定。請照 README 把設定貼到 index.html 最上方的 firebaseConfig。';
+  else if (problem) notice.textContent = problem;
+  else if (access === 'checking' || (!ready() && !timedOut)) notice.textContent = '正在連線，請稍候…';
+  else if (!ready() && timedOut) notice.textContent = '還連不上資料，網路穩定後會自動更新，不用重新整理。';
+  else notice.hidden = true;
+
+  const usable = access === 'ok' && ready();
+  const mine = usable ? myWish() : null;
+  const locked = nd > 0;
+
+  let showForm = false, showSummary = false, showFull = false;
+  if (usable) {
+    if (mine && !editing) showSummary = true;
+    else if (!mine && n >= TOTAL) showFull = true;
+    else showForm = true;
+  }
+  $('wishForm').hidden = !showForm;
+  $('wishFull').hidden = !showFull;
+  $('wishSummary').hidden = !showSummary;
+  $('summaryActions').hidden = !showSummary;
+  $('btnCancel').hidden = !(showForm && editing);
+  $('btnSubmit').textContent = mine ? '儲存修改' : '匿名送出願望';
+  $('btnSubmit').disabled = busy;
+  if (showSummary) {
+    const key = JSON.stringify(mine);
+    if (keys.summary !== key) {
+      keys.summary = key;
+      $('wishSummaryBody').textContent = '';
+      $('wishSummaryBody').append(wishView(mine));
     }
-    setChecks('want', arr(w.types));
-    setChecks('avoidT', arr(a.types));
-    setChecks('avoidC', arr(a.colors));
-    $('wantNote').value = str(w.note);
-    $('avoidNote').value = str(a.note);
-    $('wantCount').textContent = $('wantNote').value.length;
-    $('avoidCount').textContent = $('avoidNote').value.length;
-  }
+    $('btnEdit').hidden = locked;
+    $('lockNote').textContent = locked ? '已經有人開始抽籤，願望不能再修改。' : '';
+  } else { keys.summary = null; }
 
-  /* ---------- wish view ---------- */
-  function pills(items, colored) {
-    var box = h('div', 'chips');
-    items.forEach(function (t) {
-      var p = h('span', 'pill' + (colored ? ' sw' : ''), t);
-      if (colored && COLOR_MAP[t]) p.style.setProperty('--c', COLOR_MAP[t]);
-      box.append(p);
-    });
-    return box;
-  }
-  function wishView(d) {
-    var w = (d && d.want) || {}, a = (d && d.avoid) || {};
-    var root = h('div', 'wv');
-    var s1 = h('section', 'wv-sec');
-    s1.append(h('h3', null, '想要的'));
-    var wt = arr(w.types);
-    if (wt.length) s1.append(pills(wt, false));
-    if (str(w.note)) s1.append(h('p', 'wv-note', str(w.note)));
-    if (!wt.length && !str(w.note)) s1.append(h('p', 'none', '沒有特別指定'));
-    var s2 = h('section', 'wv-sec avoid');
-    s2.append(h('h3', null, '不想收到的'));
-    var at = arr(a.types), ac = arr(a.colors);
-    if (at.length) s2.append(pills(at, false));
-    if (ac.length) s2.append(pills(ac, true));
-    if (str(a.note)) s2.append(h('p', 'wv-note', str(a.note)));
-    if (!at.length && !ac.length && !str(a.note)) s2.append(h('p', 'none', '沒有特別排除'));
-    root.append(s1, s2);
-    return root;
-  }
-
-  /* ---------- state ---------- */
-  var db = null, uid = null, profRef = null;
-  var access = 'checking';   // checking | ok | noid | readonly | nodb
-  var wishes = new Map(), claims = new Map(), profile = {};
-  var seen = { w: false, c: false, p: false }, fresh = { c: false, p: false };
-  var editing = false, busy = false, justDrew = false, repaired = false, timedOut = false;
-  var keys = { summary: null, result: null };
-
-  function ready() { return seen.w && seen.c && seen.p; }
-  function myWish() { return profile.wid && wishes.has(profile.wid) ? wishes.get(profile.wid) : null; }
-  function setMsg(el, text, err) { el.textContent = text || ''; el.className = 'msg' + (err ? ' err' : ''); }
-  function setPips(el, n) {
-    el.textContent = '';
-    for (var i = 0; i < TOTAL; i++) el.append(h('span', 'pip' + (i < n ? ' on' : '')));
-  }
-
-  function render() {
-    var n = wishes.size, nd = claims.size;
-    setPips($('pipsWish'), n); setPips($('pipsDraw'), nd);
-    $('cntWish').textContent = n + ' / ' + TOTAL;
-    $('cntDraw').textContent = nd + ' / ' + TOTAL;
-
-    var notice = $('notice');
-    if (access === 'nodb') { notice.hidden = false; notice.textContent = '這個頁面需要用受邀的帳號登入才能使用。請從設計者分享的連結開啟。'; }
-    else if (access === 'noid') { notice.hidden = false; notice.textContent = '目前取不到你的登入身分，所以無法許願或抽籤。請登入後重新開啟頁面。'; }
-    else if (access === 'readonly') { notice.hidden = false; notice.textContent = '你目前只有檢視權限，不能許願或抽籤。請設計者把你的權限調成可編輯或可互動。'; }
-    else if (access === 'checking' || (!ready() && !timedOut)) { notice.hidden = false; notice.textContent = '正在連線，請稍候…'; }
-    else if (!ready() && timedOut) { notice.hidden = false; notice.textContent = '還連不上資料，網路穩定後會自動更新，不用重新整理。'; }
-    else { notice.hidden = true; }
-
-    var usable = access === 'ok' && ready();
-    var mine = usable ? myWish() : null;
-    var locked = nd > 0;
-
-    var showForm = false, showSummary = false, showFull = false;
-    if (usable) {
-      if (mine && !editing) showSummary = true;
-      else if (!mine && n >= TOTAL) showFull = true;
-      else showForm = true;
-    }
-    $('wishForm').hidden = !showForm;
-    $('wishFull').hidden = !showFull;
-    $('wishSummary').hidden = !showSummary;
-    $('summaryActions').hidden = !showSummary;
-    $('btnCancel').hidden = !(showForm && editing);
-    $('btnSubmit').textContent = mine ? '儲存修改' : '匿名送出願望';
-    $('btnSubmit').disabled = busy;
-    if (showSummary) {
-      var key = JSON.stringify(mine);
-      if (keys.summary !== key) {
-        keys.summary = key;
-        $('wishSummaryBody').textContent = '';
-        $('wishSummaryBody').append(wishView(mine));
-      }
-      $('btnEdit').hidden = locked;
-      $('lockNote').textContent = locked ? '已經有人開始抽籤，願望不能再修改。' : '';
-    } else { keys.summary = null; }
-
-    /* draw panel */
-    var drawn = usable ? profile.drawn : null;
-    var res = $('giftResult');
-    if (drawn) {
-      $('deck').hidden = true; $('btnDraw').hidden = true; $('drawHint').hidden = true;
-      var dw = wishes.get(drawn);
-      res.hidden = false;
-      if (dw) {
-        var rkey = drawn + JSON.stringify(dw);
-        if (keys.result !== rkey) {
-          keys.result = rkey;
-          res.textContent = '';
-          res.className = 'gift' + (justDrew ? ' reveal' : '');
-          res.append(h('div', 'budget', '預算 NT$ 700–800'));
-          res.append(h('h3', null, '你要準備的禮物，是這份願望'));
-          res.append(wishView(dw));
-          res.append(h('p', 'note', '這份願望的主人還不知道是你抽到。交換前請保密。'));
-          justDrew = false;
-        }
-      } else {
-        keys.result = null;
-        res.textContent = '正在讀取你抽到的願望…';
+  /* draw panel */
+  const drawn = usable ? profile.drawn : null;
+  const res = $('giftResult');
+  if (drawn) {
+    $('deck').hidden = true; $('btnDraw').hidden = true; $('drawHint').hidden = true;
+    const dw = wishes.get(drawn);
+    res.hidden = false;
+    if (dw) {
+      const rkey = drawn + JSON.stringify(dw);
+      if (keys.result !== rkey) {
+        keys.result = rkey;
+        res.textContent = '';
+        res.className = 'gift' + (justDrew ? ' reveal' : '');
+        res.append(h('div', 'budget', '預算 NT$ 700–800'));
+        res.append(h('h3', null, '你要準備的禮物，是這份願望'));
+        res.append(wishView(dw));
+        res.append(h('p', 'note', '這份願望的主人還不知道是你抽到。交換前請保密。'));
+        justDrew = false;
       }
     } else {
       keys.result = null;
-      res.hidden = true;
-      $('deck').hidden = false; $('btnDraw').hidden = false; $('drawHint').hidden = false;
-      var hint, can = false;
-      if (!usable) hint = '連線完成後才能抽。';
-      else if (!mine) hint = '先完成上面的願望，才能開抽。';
-      else if (n < TOTAL) hint = '還差 ' + (TOTAL - n) + ' 位許願。三份願望到齊後才能抽。';
-      else { hint = '每人只能抽一次，而且不會抽到自己的願望。'; can = true; }
-      $('drawHint').textContent = hint;
-      $('btnDraw').disabled = !can || busy;
+      res.textContent = '正在讀取你抽到的願望…';
     }
+  } else {
+    keys.result = null;
+    res.hidden = true;
+    $('deck').hidden = false; $('btnDraw').hidden = false; $('drawHint').hidden = false;
+    let hint, can = false;
+    if (!usable) hint = '連線完成後才能抽。';
+    else if (!mine) hint = '先完成上面的願望，才能開抽。';
+    else if (n < TOTAL) hint = '還差 ' + (TOTAL - n) + ' 位許願。三份願望到齊後才能抽。';
+    else { hint = '每人只能抽一次，而且不會抽到自己的願望。'; can = true; }
+    $('drawHint').textContent = hint;
+    $('btnDraw').disabled = !can || busy;
   }
+}
 
-  /* ---------- writes ---------- */
-  async function withLock(name, fn) {
-    var ref = db.doc('locks/' + name);
-    var r = await ref.acquire({ holder: Math.random().toString(36).slice(2), ttlMs: 5000 });
-    if (!r.acquired) { var e = new Error('busy'); e.busy = true; throw e; }
-    return fn();
-  }
+/* ---------- writes ---------- */
+function collect() {
+  const wt = checked('want'), wn = $('wantNote').value.trim();
+  if (!wt.length && !wn) { setMsg($('formMsg'), '請至少選一個想要的類型，或寫下想要的方向。', true); return null; }
+  return {
+    want: { types: wt, note: wn },
+    avoid: { types: checked('avoidT'), colors: checked('avoidC'), note: $('avoidNote').value.trim() }
+  };
+}
 
-  function collect() {
-    var wt = checked('want'), wn = $('wantNote').value.trim();
-    if (!wt.length && !wn) { setMsg($('formMsg'), '請至少選一個想要的類型，或寫下想要的方向。', true); return null; }
-    return {
-      want: { types: wt, note: wn },
-      avoid: { types: checked('avoidT'), colors: checked('avoidC'), note: $('avoidNote').value.trim() }
-    };
-  }
-
-  $('wishForm').addEventListener('submit', async function (ev) {
-    ev.preventDefault();
-    if (busy || !db) return;
+$('wishForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  if (busy || access !== 'ok') return;
+  setMsg($('formMsg'), '');
+  const payload = collect();
+  if (!payload) return;
+  if (claims.size > 0) { setMsg($('formMsg'), '已經有人開始抽籤，願望不能再修改。', true); return; }
+  busy = true; render();
+  try {
+    if (myWish()) {
+      await updateDoc(doc(db, 'wishes', profile.wid), payload);
+      editing = false;
+    } else {
+      await runTransaction(db, async (tx) => {
+        const u = await tx.get(userRef);
+        if (u.exists() && u.data().wid) throw fail('has');
+        const snaps = await Promise.all(SLOTS.map((s) => tx.get(doc(db, 'wishes', s))));
+        const free = SLOTS.filter((s, i) => !snaps[i].exists());
+        if (!free.length) throw fail('full');
+        const slot = free[rand(free.length)];
+        tx.set(userRef, { wid: slot, drawn: null });
+        tx.set(doc(db, 'wishes', slot), payload);
+      });
+    }
     setMsg($('formMsg'), '');
-    var payload = collect();
-    if (!payload) return;
-    if (claims.size > 0) { setMsg($('formMsg'), '已經有人開始抽籤，願望不能再修改。', true); return; }
-    busy = true; render();
-    try {
-      if (myWish()) {
-        await db.doc('wishes/' + profile.wid).set(payload);
-        editing = false;
-      } else {
-        await withLock('wish', async function () {
-          var cur = await db.collection('wishes').get();
-          if (cur.size >= TOTAL) { var e = new Error('full'); e.full = true; throw e; }
-          var ref = db.collection('wishes').doc();
-          await profRef.set({ wid: ref.id, drawn: null });
-          await ref.set(payload);
+  } catch (e) {
+    if (e && e.tag === 'full') setMsg($('formMsg'), '三份願望已經到齊，不能再新增了。', true);
+    else if (e && e.tag === 'has') setMsg($('formMsg'), '你已經許過願了，請重新整理頁面。', true);
+    else { console.error(e); setMsg($('formMsg'), explain(e, '沒有送出成功，請再按一次。'), true); }
+  } finally { busy = false; render(); }
+});
+
+$('btnEdit').addEventListener('click', () => {
+  fillForm(myWish());
+  editing = true; setMsg($('formMsg'), ''); render();
+});
+$('btnCancel').addEventListener('click', () => { editing = false; setMsg($('formMsg'), ''); render(); });
+
+$('btnDraw').addEventListener('click', async () => {
+  if (busy || access !== 'ok') return;
+  setMsg($('drawMsg'), '');
+  busy = true; render();
+  $('deck').classList.add('shuffle');
+  try {
+    await Promise.all([
+      runTransaction(db, async (tx) => {
+        const u = await tx.get(userRef);
+        const ws = await Promise.all(SLOTS.map((s) => tx.get(doc(db, 'wishes', s))));
+        const cs = await Promise.all(SLOTS.map((s) => tx.get(doc(db, 'claims', s))));
+        const pd = u.exists() ? u.data() : null;
+        if (!pd || !pd.wid) throw fail('nowish');
+        if (pd.drawn) return;
+        const mine = pd.wid;
+        const ids = SLOTS.filter((s, i) => ws[i].exists());
+        if (ids.length < TOTAL) throw fail('notyet');
+        const claimed = new Set(SLOTS.filter((s, i) => cs[i].exists()));
+        const byset = new Set(cs.filter((d) => d.exists()).map((d) => d.data().by));
+        const cand = ids.filter((w) => w !== mine && !claimed.has(w));
+        const left = ids.filter((w) => w !== mine && !byset.has(w));
+        /* never leave the last drawer with only their own wish */
+        const ok = cand.filter((c) => {
+          const rest = cand.filter((x) => x !== c);
+          return !(left.length === 1 && rest.length === 1 && rest[0] === left[0]);
         });
-      }
-      setMsg($('formMsg'), '');
-    } catch (e) {
-      if (e && e.busy) setMsg($('formMsg'), '有人正在送出，請幾秒後再按一次。', true);
-      else if (e && e.full) setMsg($('formMsg'), '三份願望已經到齊，不能再新增了。', true);
-      else { console.error(e); setMsg($('formMsg'), '沒有送出成功，請再按一次。', true); }
-    } finally { busy = false; render(); }
-  });
-
-  $('btnEdit').addEventListener('click', function () {
-    fillForm(myWish());
-    editing = true; setMsg($('formMsg'), ''); render();
-  });
-  $('btnCancel').addEventListener('click', function () { editing = false; setMsg($('formMsg'), ''); render(); });
-
-  $('btnDraw').addEventListener('click', async function () {
-    if (busy || !db) return;
-    setMsg($('drawMsg'), '');
-    busy = true; render();
-    $('deck').classList.add('shuffle');
-    try {
-      await Promise.all([
-        withLock('draw', async function () {
-          var res = await Promise.all([db.collection('wishes').get(), db.collection('claims').get(), profRef.get()]);
-          var ws = res[0], cs = res[1], ps = res[2];
-          var pd = ps.exists ? ps.data() : null;
-          if (!pd || !pd.wid) { var e0 = new Error('nowish'); e0.code0 = 'nowish'; throw e0; }
-          if (pd.drawn) return;
-          var mine = pd.wid;
-          var ids = ws.docs.map(function (d) { return d.id; });
-          if (ids.length < TOTAL) { var e1 = new Error('notyet'); e1.code0 = 'notyet'; throw e1; }
-          var claimed = new Set(cs.docs.map(function (d) { return d.id; }));
-          var byset = new Set(cs.docs.map(function (d) { return d.data().by; }));
-          var cand = ids.filter(function (w) { return w !== mine && !claimed.has(w); });
-          var left = ids.filter(function (w) { return w !== mine && !byset.has(w); });
-          /* never leave the last drawer with only their own wish */
-          var ok = cand.filter(function (c) {
-            var rest = cand.filter(function (x) { return x !== c; });
-            return !(left.length === 1 && rest.length === 1 && rest[0] === left[0]);
-          });
-          if (!ok.length) { var e2 = new Error('none'); e2.code0 = 'none'; throw e2; }
-          var pick = ok[rand(ok.length)];
-          await profRef.set({ wid: mine, drawn: pick });
-          await db.doc('claims/' + pick).set({ by: mine });
-          justDrew = true;
-        }),
-        sleep(1100)
-      ]);
-    } catch (e) {
-      if (e && e.busy) setMsg($('drawMsg'), '有人正在抽，請等幾秒再按一次。', true);
-      else if (e && e.code0 === 'nowish') setMsg($('drawMsg'), '先完成你的願望才能抽。', true);
-      else if (e && e.code0 === 'notyet') setMsg($('drawMsg'), '三份願望還沒到齊。', true);
-      else if (e && e.code0 === 'none') setMsg($('drawMsg'), '目前沒有可以抽的願望，請稍後再試。', true);
-      else { console.error(e); setMsg($('drawMsg'), '沒有抽成功，請再按一次。', true); }
-    } finally {
-      $('deck').classList.remove('shuffle');
-      busy = false; render();
-    }
-  });
-
-  /* A draw whose claim write was cut off is written again once, after fresh data arrives. */
-  async function repair() {
-    if (repaired || !fresh.c || !fresh.p) return;
-    repaired = true;
-    if (profile.drawn && profile.wid && !claims.has(profile.drawn)) {
-      try { await db.doc('claims/' + profile.drawn).set({ by: profile.wid }); } catch (e) { console.error(e); }
-    }
+        if (!ok.length) throw fail('none');
+        const pick = ok[rand(ok.length)];
+        tx.set(userRef, { wid: mine, drawn: pick });
+        tx.set(doc(db, 'claims', pick), { by: mine });
+        justDrew = true;
+      }),
+      sleep(1100)
+    ]);
+  } catch (e) {
+    if (e && e.tag === 'nowish') setMsg($('drawMsg'), '先完成你的願望才能抽。', true);
+    else if (e && e.tag === 'notyet') setMsg($('drawMsg'), '三份願望還沒到齊。', true);
+    else if (e && e.tag === 'none') setMsg($('drawMsg'), '目前沒有可以抽的願望，請稍後再試。', true);
+    else { console.error(e); setMsg($('drawMsg'), explain(e, '沒有抽成功，請再按一次。'), true); }
+  } finally {
+    $('deck').classList.remove('shuffle');
+    busy = false; render();
   }
+});
 
-  /* ---------- start ---------- */
-  render();
-  setTimeout(function () { timedOut = true; render(); }, 10000);
+/* ---------- start ---------- */
+function subscribe() {
+  const onErr = (e) => {
+    console.error(e);
+    problem = e && e.code === 'permission-denied'
+      ? '資料庫規則還沒設定好，讀不到資料。請照 README 貼上並發布 Firestore 規則。'
+      : '讀取資料時發生問題，請稍後再試。';
+    render();
+  };
+  onSnapshot(collection(db, 'wishes'), (s) => {
+    wishes = new Map(s.docs.map((d) => [d.id, d.data()]));
+    seen.w = true; problem = ''; render();
+  }, onErr);
+  onSnapshot(collection(db, 'claims'), (s) => {
+    claims = new Map(s.docs.map((d) => [d.id, d.data().by]));
+    seen.c = true; render();
+  }, onErr);
+  onSnapshot(userRef, (s) => {
+    profile = s.exists() ? (s.data() || {}) : {};
+    seen.p = true; render();
+  }, onErr);
+}
 
-  (async function start() {
-    var c = window.claude;
-    if (!c || !c.use) { access = 'nodb'; render(); return; }
-    try {
-      db = await c.use('db');
-      var user = await c.use('user');
-      uid = user ? await user.id() : null;
-      var canWrite = user ? await user.can('data.write') : null;
-      if (!db) { access = 'nodb'; render(); return; }
-      if (!uid) { access = 'noid'; render(); return; }
-      access = canWrite === false ? 'readonly' : 'ok';
-      profRef = db.doc('data/users/' + uid + '/profile');
-      db.collection('wishes').onSnapshot(function (s) {
-        wishes = new Map(s.docs.map(function (d) { return [d.id, d.data()]; }));
-        seen.w = true; render();
-      }, function (e) { console.error(e); });
-      db.collection('claims').onSnapshot(function (s) {
-        claims = new Map(s.docs.map(function (d) { return [d.id, d.data().by]; }));
-        seen.c = true; if (!s.metadata.fromCache) fresh.c = true;
-        render(); repair();
-      }, function (e) { console.error(e); });
-      profRef.onSnapshot(function (s) {
-        profile = s.exists ? (s.data() || {}) : {};
-        seen.p = true; if (!s.metadata.fromCache) fresh.p = true;
-        render(); repair();
-      }, function (e) { console.error(e); });
+render();
+setTimeout(() => { timedOut = true; render(); }, 10000);
+
+(async function start() {
+  if (!firebaseConfig.apiKey || firebaseConfig.apiKey.indexOf('YOUR_') === 0) {
+    access = 'noconfig'; render(); return;
+  }
+  try {
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    db = getFirestore(app);
+    let started = false;
+    onAuthStateChanged(auth, (user) => {
+      if (!user || started) return;
+      started = true;
+      uid = user.uid;
+      userRef = doc(db, 'users', uid);
+      access = 'ok';
+      subscribe();
       render();
-    } catch (e) {
-      console.error(e); access = 'nodb'; render();
-    }
-  })();
+    });
+    await signInAnonymously(auth);
+  } catch (e) {
+    console.error(e);
+    problem = e && e.code === 'auth/operation-not-allowed'
+      ? 'Firebase 還沒開啟「匿名登入」。請到 Authentication 的登入方式把「匿名」打開。'
+      : e && e.code === 'auth/unauthorized-domain'
+        ? '這個網址還沒加入 Firebase 的授權網域。請到 Authentication 的設定加入你的 github.io 網域。'
+        : '登入 Firebase 失敗，請檢查設定是否貼對。';
+    render();
+  }
 })();
 </script>
-
-</body></html>
+</body>
+</html>
