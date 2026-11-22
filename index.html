@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 聖誕秘密交換禮物｜鯰鯰・阿猛・泰迪</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Sans TC & Mountains of Christmas -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Tone.js for festive sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        xmas: {
+                            forest: '#1B4332',
+                            pine: '#2D6A4F',
+                            sage: '#40916C',
+                            red: '#D62828',
+                            berry: '#BC4749',
+                            snow: '#F8F9FA',
+                            gold: '#FFD166',
+                            amber: '#F4A261',
+                            cream: '#FFFDF7'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        festive: ['"Mountains of Christmas"', '"Noto Sans TC"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at top, #2D6A4F 0%, #1B4332 60%, #0F291E 100%);
+            min-height: 100vh;
+            color: #1B4332;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 拐杖糖斜紋邊框 */
+        .candy-cane-border {
+            background: repeating-linear-gradient(
+                45deg,
+                #D62828,
+                #D62828 12px,
+                #FFFFFF 12px,
+                #FFFFFF 24px,
+                #2D6A4F 24px,
+                #2D6A4F 36px,
+                #FFFFFF 36px,
+                #FFFFFF 48px
+            );
+            padding: 5px;
+            border-radius: 1.5rem;
+        }
+
+        /* 聖誕彩燈閃爍動畫 */
+        @keyframes glow-red {
+            0%, 100% { box-shadow: 0 0 8px #ff4d4d, 0 0 16px #D62828; opacity: 1; }
+            50% { box-shadow: 0 0 2px #ff4d4d; opacity: 0.45; }
+        }
+        @keyframes glow-gold {
+            0%, 100% { box-shadow: 0 0 8px #FFD166, 0 0 16px #F4A261; opacity: 0.5; }
+            50% { box-shadow: 0 0 12px #FFD166, 0 0 22px #F4A261; opacity: 1; }
+        }
+        @keyframes glow-green {
+            0%, 100% { box-shadow: 0 0 8px #52b788, 0 0 16px #40916C; opacity: 1; }
+            50% { box-shadow: 0 0 2px #52b788; opacity: 0.45; }
+        }
+
+        .bulb-red { animation: glow-red 2.2s infinite ease-in-out; }
+        .bulb-gold { animation: glow-gold 1.8s infinite ease-in-out; }
+        .bulb-green { animation: glow-green 2.5s infinite ease-in-out; }
+
+        /* 禮物盒搖晃動畫 */
+        @keyframes gift-wobble {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            15% { transform: rotate(-6deg) scale(1.04); }
+            30% { transform: rotate(6deg) scale(1.04); }
+            45% { transform: rotate(-4deg) scale(1.02); }
+            60% { transform: rotate(4deg) scale(1.02); }
+            75% { transform: rotate(0deg) scale(1); }
+        }
+        .animate-gift-wobble:hover {
+            animation: gift-wobble 0.9s ease-in-out infinite;
+        }
+
+        /* 雪花畫布固定在背景 */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1B4332;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D62828;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-xmas-red selection:text-white">
+
+    <!-- 飄雪背景畫布 -->
+    <canvas id="snow-canvas"></canvas>
+
+    <!-- 頂部聖誕彩燈串裝飾 -->
+    <div class="relative z-10 w-full overflow-hidden pt-1 pb-3 pointer-events-none select-none">
+        <svg class="w-full h-10" viewBox="0 0 1200 50" preserveAspectRatio="none">
+            <!-- 電線 -->
+            <path d="M0,10 Q150,35 300,10 T600,10 T900,10 T1200,10" fill="none" stroke="#0b1f17" stroke-width="3"/>
+            <!-- 燈泡群 -->
+            <g transform="translate(75, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#D62828" class="bulb-red"/>
+            </g>
+            <g transform="translate(225, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#FFD166" class="bulb-gold"/>
+            </g>
+            <g transform="translate(375, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#52B788" class="bulb-green"/>
+            </g>
+            <g transform="translate(525, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#D62828" class="bulb-red"/>
+            </g>
+            <g transform="translate(675, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#FFD166" class="bulb-gold"/>
+            </g>
+            <g transform="translate(825, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#52B788" class="bulb-green"/>
+            </g>
+            <g transform="translate(975, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#D62828" class="bulb-red"/>
+            </g>
+            <g transform="translate(1125, 21)">
+                <rect x="-3" y="-5" width="6" height="5" fill="#1B4332"/>
+                <circle cx="0" cy="6" r="6" fill="#FFD166" class="bulb-gold"/>
+            </g>
+        </svg>
+    </div>
+
+    <!-- 主容器 -->
+    <main class="relative z-10 max-w-3xl mx-auto px-4 pb-16">
+        
+        <!-- 頂部標題與聖誕花圈裝飾 -->
+        <header class="text-center mb-6">
+            <div class="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 text-xmas-gold px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider mb-3 shadow-md">
+                <span>🎄 MERRY CHRISTMAS 2026</span>
+                <span>•</span>
+                <span>三人專屬秘密交換</span>
+            </div>
+
+            <div class="flex items-center justify-center gap-3 sm:gap-5">
+                <!-- 左側聖誕樹 SVG -->
+                <svg class="w-11 h-11 sm:w-14 sm:h-14 shrink-0 drop-shadow-lg" viewBox="0 0 64 64">
+                    <polygon points="32,6 14,28 24,28 10,44 22,44 8,56 56,56 42,44 54,44 40,28 50,28" fill="#40916C"/>
+                    <polygon points="32,6 22,28 32,28 20,44 32,44 18,56 32,56" fill="#52B788"/>
+                    <rect x="27" y="56" width="10" height="7" rx="1" fill="#7F4F24"/>
+                    <polygon points="32,1 34,6 39,6 35,9 36,14 32,11 28,14 29,9 25,6 30,6" fill="#FFD166"/>
+                    <circle cx="26" cy="24" r="2.5" fill="#D62828"/>
+                    <circle cx="38" cy="36" r="2.5" fill="#FFD166"/>
+                    <circle cx="23" cy="48" r="2.5" fill="#D62828"/>
+                    <circle cx="42" cy="50" r="2.5" fill="#FFFFFF"/>
+                </svg>
+
+                <div>
+                    <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">
+                        聖誕秘密許願與抽籤屋
+                    </h1>
+                    <p class="text-emerald-100 text-sm sm:text-base mt-1 font-medium">
+                        專屬成員：<span class="text-xmas-gold font-bold">鯰鯰</span>、<span class="text-xmas-gold font-bold">阿猛</span>、<span class="text-xmas-gold font-bold">泰迪</span>
+                    </p>
+                </div>
+
+                <!-- 右側薑餅人/聖誕鈴鐺 SVG -->
+                <svg class="w-11 h-11 sm:w-14 sm:h-14 shrink-0 drop-shadow-lg" viewBox="0 0 64 64">
+                    <circle cx="32" cy="18" r="10" fill="#C68B59"/>
+                    <path d="M16,32 Q32,26 48,32 L44,40 L39,38 L42,56 L33,56 L32,45 L31,56 L22,56 L25,38 L20,40 Z" fill="#C68B59"/>
+                    <circle cx="28.5" cy="16" r="1.5" fill="#FFFFFF"/>
+                    <circle cx="35.5" cy="16" r="1.5" fill="#FFFFFF"/>
+                    <path d="M28,21 Q32,24 36,21" fill="none" stroke="#D62828" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="32" cy="34" r="2" fill="#D62828"/>
+                    <circle cx="32" cy="41" r="2" fill="#2D6A4F"/>
+                    <path d="M27,27 L37,27 L32,30 Z" fill="#D62828"/>
+                </svg>
+            </div>
+
+            <!-- 預算與匿名承諾橫幅 -->
+            <div class="mt-4 inline-flex flex-wrap items-center justify-center gap-2 sm:gap-4 bg-xmas-red text-white px-5 py-2 rounded-2xl shadow-lg border-2 border-white/30 text-xs sm:text-sm font-bold">
+                <span class="flex items-center gap-1.5">
+                    🎁 禮物預算上限：<span class="bg-white text-xmas-red px-2 py-0.5 rounded-lg font-black">NT$ 700 - 800 元</span>
+                </span>
+                <span class="hidden sm:inline text-white/60">|</span>
+                <span class="flex items-center gap-1.5">
+                    🔐 願望保密・抽籤結果僅限本人密碼解鎖查看
+                </span>
+            </div>
+        </header>
+
+        <!-- 雙名單即時進度儀表板（已許願名單 & 已抽籤名單） -->
+        <section class="bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-6 mb-6 shadow-xl border-2 border-xmas-gold/50 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🎅</span>
+                    <div>
+                        <h2 class="font-black text-xmas-forest text-base sm:text-lg">交換禮物即時進度看板</h2>
+                        <p class="text-xs text-gray-500" id="sync-status-text">連線中... 正在同步三人狀態</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="wish-progress-badge" class="bg-xmas-forest text-white text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full shadow-sm">
+                        許願進度：0 / 3 人
+                    </span>
+                </div>
+            </div>
+
+            <!-- 雙名單網格：左側已許願名單、右側已抽籤名單 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 名單 1：已許願名單 -->
+                <div class="bg-emerald-50/70 border-2 border-emerald-200 rounded-2xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-black text-xmas-forest text-sm sm:text-base flex items-center gap-1.5">
+                            <span>🎄</span> 已許願名單
+                        </h3>
+                        <span class="text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">內容保密中</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div id="wish-row-鯰鯰" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🐟</span> 鯰鯰</span>
+                            <span id="wish-badge-鯰鯰" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">⏳ 許願中</span>
+                        </div>
+                        <div id="wish-row-阿猛" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🦁</span> 阿猛</span>
+                            <span id="wish-badge-阿猛" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">⏳ 許願中</span>
+                        </div>
+                        <div id="wish-row-泰迪" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🧸</span> 泰迪</span>
+                            <span id="wish-badge-泰迪" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">⏳ 許願中</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 名單 2：已抽籤名單 -->
+                <div class="bg-red-50/60 border-2 border-red-200 rounded-2xl p-3.5 sm:p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="font-black text-xmas-red text-sm sm:text-base flex items-center gap-1.5">
+                            <span>🎁</span> 已抽籤名單
+                        </h3>
+                        <span id="draw-progress-badge" class="text-[11px] font-bold text-xmas-red bg-red-100 px-2 py-0.5 rounded-full">0 / 3 已抽</span>
+                    </div>
+                    <div class="space-y-2">
+                        <div id="draw-row-鯰鯰" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🐟</span> 鯰鯰</span>
+                            <span id="draw-badge-鯰鯰" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">🔒 尚未抽籤</span>
+                        </div>
+                        <div id="draw-row-阿猛" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🦁</span> 阿猛</span>
+                            <span id="draw-badge-阿猛" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">🔒 尚未抽籤</span>
+                        </div>
+                        <div id="draw-row-泰迪" class="flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs">
+                            <span class="font-bold text-gray-800 text-sm flex items-center gap-2"><span>🧸</span> 泰迪</span>
+                            <span id="draw-badge-泰迪" class="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">🔒 尚未抽籤</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 步驟切換導覽分頁 -->
+        <div class="grid grid-cols-2 gap-2 sm:gap-3 bg-xmas-forest/80 p-1.5 rounded-2xl mb-6 border border-white/20 shadow-inner">
+            <button id="tab-wish" onclick="switchTab('wish')" class="py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 bg-white text-xmas-red shadow-md">
+                <span>✍️</span>
+                <span>1. 秘密許願填寫區</span>
+            </button>
+            <button id="tab-draw" onclick="switchTab('draw')" class="py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 text-white hover:bg-white/10">
+                <span>🎁</span>
+                <span>2. 聖誕交換抽籤區</span>
+            </button>
+        </div>
+
+        <!-- ==================== 區塊一：秘密許願填寫區 ==================== -->
+        <section id="section-wish" class="candy-cane-border shadow-2xl">
+            <div class="bg-xmas-cream rounded-[1.25rem] p-5 sm:p-8">
+                <div class="flex items-center justify-between border-b-2 border-dashed border-emerald-200 pb-4 mb-6">
+                    <div>
+                        <h3 class="text-xl sm:text-2xl font-black text-xmas-forest flex items-center gap-2">
+                            <span>📜</span> 填寫你的聖誕願望卡
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                            設定你的 <strong>4位數個人密碼</strong> 並送出願望，畫面只會公開「已許願名單」，願望內容只有抽中你的人看得到！
+                        </p>
+                    </div>
+                </div>
+
+                <form id="wish-form" onsubmit="handleWishSubmit(event)" class="space-y-5">
+                    <!-- 步驟 1-1：選擇身分 -->
+                    <div>
+                        <label class="block text-sm font-black text-xmas-forest mb-2">
+                            Step 1. 請先點選「你是誰」：<span class="text-xmas-red">*</span>
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="cursor-pointer">
+                                <input type="radio" name="wish-member" value="鯰鯰" class="peer sr-only" onchange="onWishMemberSelect('鯰鯰')">
+                                <div class="p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center peer-checked:border-xmas-red peer-checked:bg-red-50 peer-checked:shadow-md transition-all hover:border-emerald-400">
+                                    <div class="text-2xl mb-1">🐟</div>
+                                    <div class="font-black text-gray-800">鯰鯰</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="wish-member" value="阿猛" class="peer sr-only" onchange="onWishMemberSelect('阿猛')">
+                                <div class="p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center peer-checked:border-xmas-red peer-checked:bg-red-50 peer-checked:shadow-md transition-all hover:border-emerald-400">
+                                    <div class="text-2xl mb-1">🦁</div>
+                                    <div class="font-black text-gray-800">阿猛</div>
+                                </div>
+                            </label>
+                            <label class="cursor-pointer">
+                                <input type="radio" name="wish-member" value="泰迪" class="peer sr-only" onchange="onWishMemberSelect('泰迪')">
+                                <div class="p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center peer-checked:border-xmas-red peer-checked:bg-red-50 peer-checked:shadow-md transition-all hover:border-emerald-400">
+                                    <div class="text-2xl mb-1">🧸</div>
+                                    <div class="font-black text-gray-800">泰迪</div>
+                                </div>
+                            </label>
+                        </div>
+                        <p id="member-already-wished-hint" class="hidden mt-2 text-xs font-bold text-amber-700 bg-amber-100 px-3 py-2 rounded-xl">
+                            ⚠️ 你已經送出過願望囉！若尚未開始抽籤，重新送出將會覆蓋你原本的匿名願望（需輸入原本設定的 4 位數暗號驗證）。
+                        </p>
+                    </div>
+
+                    <!-- 步驟 1-2：設定 4 位數個人密碼 -->
+                    <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4">
+                        <label for="wish-pin" class="block text-sm font-black text-xmas-forest mb-1">
+                            Step 2. 設定你的「4位數個人密碼 (PIN碼)」：<span class="text-xmas-red">*</span>
+                        </label>
+                        <p class="text-xs text-gray-600 mb-2.5">
+                            確保<strong>抽籤結果只有抽籤的本人可以看</strong>！等一下抽籤與查看抽中對象時需要輸入這組密碼。
+                        </p>
+                        <input type="password" id="wish-pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" required
+                            placeholder="請輸入 4 位數字（例如：1225）"
+                            class="w-full sm:w-64 px-4 py-2.5 rounded-xl border-2 border-emerald-300 bg-white font-mono text-lg tracking-widest text-center focus:outline-none focus:border-xmas-red">
+                    </div>
+
+                    <!-- 步驟 1-3：想要的禮物方向 -->
+                    <div>
+                        <label for="wish-want" class="block text-sm font-black text-xmas-forest mb-1">
+                            Step 3. 🎄 許願池：想要的禮物類型 / 方向 <span class="text-xmas-red">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            請參考預算 <strong class="text-xmas-red">NT$ 700 - 800 元</strong> 填寫（例如：木質調香氛蠟燭、質感保溫杯、桌面實用3C小物、冬季保暖圍巾、手工餅乾零食禮盒等）
+                        </p>
+                        <textarea id="wish-want" rows="3" required
+                            placeholder="寫下你希望聖誕老人準備的禮物類型或方向..."
+                            class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 bg-white focus:outline-none focus:border-xmas-pine text-sm sm:text-base"></textarea>
+                    </div>
+
+                    <!-- 步驟 1-4：不想要收到的地雷清單 -->
+                    <div>
+                        <label for="wish-avoid" class="block text-sm font-black text-xmas-red mb-1">
+                            Step 4. 💣 避雷區：絕對不想要收到的（類型、顏色、氣味等） <span class="text-xmas-red">*</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mb-2">
+                            幫聖誕老人排除地雷！（例如：不要馬克杯、不要螢光粉紅色、不要太甜的糖果、不要娃娃公仔、不要花香調）
+                        </p>
+                        <textarea id="wish-avoid" rows="2" required
+                            placeholder="寫下你不喜歡的顏色、款式、氣味或物品類型..."
+                            class="w-full px-4 py-3 rounded-2xl border-2 border-red-200 bg-red-50/30 focus:outline-none focus:border-xmas-red text-sm sm:text-base"></textarea>
+                    </div>
+
+                    <!-- 步驟 1-5：備註或神秘暗示 -->
+                    <div>
+                        <label for="wish-note" class="block text-sm font-black text-gray-700 mb-1">
+                            Step 5. ✨ 給送禮人的備註 / 神秘暗示（選填）
+                        </label>
+                        <input type="text" id="wish-note"
+                            placeholder="例如：最近常常熬夜追劇、喜歡簡約大地色系、祝你聖誕快樂！"
+                            class="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 bg-white focus:outline-none focus:border-xmas-pine text-sm sm:text-base">
+                    </div>
+
+                    <!-- 送出按鈕 -->
+                    <div class="pt-2">
+                        <button type="submit" id="submit-wish-btn"
+                            class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-xmas-red to-xmas-berry hover:from-red-700 hover:to-red-800 text-white font-black text-base sm:text-lg shadow-lg hover:shadow-xl transform active:scale-[0.99] transition-all flex items-center justify-center gap-2">
+                            <span>🎄</span>
+                            <span>送出我的聖誕願望卡</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ==================== 區塊二：聖誕交換抽籤區 ==================== -->
+        <section id="section-draw" class="hidden candy-cane-border shadow-2xl">
+            <div class="bg-xmas-cream rounded-[1.25rem] p-5 sm:p-8">
+                <div class="border-b-2 border-dashed border-emerald-200 pb-4 mb-6">
+                    <h3 class="text-xl sm:text-2xl font-black text-xmas-forest flex items-center gap-2">
+                        <span>🎁</span> 聖誕交換禮物抽籤區
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-600 mt-1">
+                        三人皆許完願即可進行抽籤！每人限抽一次，絕不抽到自己，且<strong>只有輸入本人密碼才能看到抽籤結果</strong>。
+                    </p>
+                </div>
+
+                <!-- 狀態 A：尚未集滿 3 人許願 -->
+                <div id="draw-locked-panel" class="text-center py-8 px-4 bg-white rounded-2xl border-2 border-dashed border-gray-300">
+                    <div class="text-5xl mb-3">⏳</div>
+                    <h4 class="text-lg sm:text-xl font-black text-gray-800 mb-2">等待三人皆許完願後即可抽籤</h4>
+                    <p class="text-sm text-gray-600 max-w-md mx-auto mb-5">
+                        只要 <strong>鯰鯰、阿猛、泰迪</strong> 三位都完成許願，抽籤區就會立刻開放，確保每個人都能抽到非本人的專屬願望！
+                    </p>
+                    <button onclick="switchTab('wish')" class="px-5 py-2.5 rounded-xl bg-xmas-pine text-white font-bold text-sm hover:bg-xmas-forest transition">
+                        返回填寫願望 →
+                    </button>
+                </div>
+
+                <!-- 狀態 B：已集滿 3 人，開放選擇身分與輸入密碼抽籤 -->
+                <div id="draw-unlocked-panel" class="hidden space-y-6">
+                    <!-- 選擇抽籤者身分 -->
+                    <div>
+                        <label class="block text-sm font-black text-xmas-forest mb-2">
+                            Step 1. 請點選「你是誰」來進行抽籤或查看自己的結果：
+                        </label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button type="button" onclick="selectDrawMember('鯰鯰')" id="draw-btn-鯰鯰"
+                                class="draw-member-btn p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center transition-all hover:border-xmas-pine">
+                                <div class="text-2xl mb-1">🐟</div>
+                                <div class="font-black text-gray-800">鯰鯰</div>
+                                <div id="draw-tag-鯰鯰" class="mt-1 text-[11px] font-bold text-emerald-600">可抽籤</div>
+                            </button>
+                            <button type="button" onclick="selectDrawMember('阿猛')" id="draw-btn-阿猛"
+                                class="draw-member-btn p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center transition-all hover:border-xmas-pine">
+                                <div class="text-2xl mb-1">🦁</div>
+                                <div class="font-black text-gray-800">阿猛</div>
+                                <div id="draw-tag-阿猛" class="mt-1 text-[11px] font-bold text-emerald-600">可抽籤</div>
+                            </button>
+                            <button type="button" onclick="selectDrawMember('泰迪')" id="draw-btn-泰迪"
+                                class="draw-member-btn p-3 sm:p-4 rounded-2xl border-2 border-gray-200 bg-white text-center transition-all hover:border-xmas-pine">
+                                <div class="text-2xl mb-1">🧸</div>
+                                <div class="font-black text-gray-800">泰迪</div>
+                                <div id="draw-tag-泰迪" class="mt-1 text-[11px] font-bold text-emerald-600">可抽籤</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 輸入個人 4 位數密碼驗證 -->
+                    <div id="draw-auth-box" class="hidden bg-white p-5 rounded-2xl border-2 border-emerald-200 shadow-sm space-y-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-black text-xmas-forest text-base" id="draw-selected-title">驗證本人身分：</span>
+                            <span id="draw-once-badge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-xmas-red">
+                                每人僅限抽一次
+                            </span>
+                        </div>
+
+                        <p class="text-xs text-amber-800 bg-amber-50 border border-amber-200 px-3 py-2 rounded-xl font-medium">
+                            👀 <strong>防偷看提醒：</strong>請確認身邊沒有其他兩位朋友在看螢幕，再輸入你的 4 位數密碼開啟結果！
+                        </p>
+
+                        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                            <input type="password" id="draw-pin-input" inputmode="numeric" maxlength="4"
+                                placeholder="輸入你設定的 4 位數個人密碼"
+                                class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-300 font-mono text-center text-lg tracking-widest focus:outline-none focus:border-xmas-red">
+                            <button type="button" onclick="executeOrRevealDraw()" id="execute-draw-btn"
+                                class="px-6 py-3 rounded-xl bg-xmas-red hover:bg-red-700 text-white font-black text-base shadow-md transition flex items-center justify-center gap-2 shrink-0 animate-gift-wobble">
+                                <span>🎁</span>
+                                <span id="execute-draw-btn-text">立即抽籤並查看對象</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 抽籤結果展示卡片（僅在通過本人密碼驗證後顯示） -->
+                    <div id="draw-result-card" class="hidden relative overflow-hidden rounded-3xl bg-gradient-to-br from-xmas-forest via-xmas-pine to-emerald-800 text-white p-6 sm:p-8 shadow-2xl border-4 border-xmas-gold">
+                        <!-- 裝飾雪花 -->
+                        <div class="absolute -right-6 -top-6 text-8xl opacity-10 pointer-events-none select-none">❄️</div>
+                        <div class="absolute -left-6 -bottom-6 text-8xl opacity-10 pointer-events-none select-none">🎄</div>
+
+                        <div class="relative z-10">
+                            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                <span class="bg-xmas-gold text-xmas-forest font-black text-xs sm:text-sm px-3 py-1 rounded-full shadow">
+                                    🎉 抽籤成功！你的專屬送禮對象
+                                </span>
+                                <span class="text-xs text-emerald-200 font-bold">
+                                    預算限制：NT$ 700 - 800 元
+                                </span>
+                            </div>
+
+                            <!-- 明確顯示抽到的對象名字 -->
+                            <div class="bg-white/15 backdrop-blur-sm border-2 border-xmas-gold/70 rounded-2xl p-4 sm:p-5 mb-5 text-center shadow-inner">
+                                <div class="text-xs text-xmas-gold font-bold tracking-wider mb-1">🎯 你抽到的幸運交換對象是</div>
+                                <div id="result-target-name" class="text-3xl sm:text-4xl font-black text-white tracking-wide py-1 drop-shadow">
+                                    🎁 讀取中...
+                                </div>
+                                <p class="text-xs text-emerald-100 mt-1">
+                                    噓～請幫他保密，依照下方願望清單準備一份 700-800 元的聖誕禮物吧！
+                                </p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="bg-white text-gray-900 rounded-2xl p-4 shadow-md">
+                                    <div class="text-xs font-black text-xmas-pine uppercase tracking-wider mb-1">
+                                        ✨ 許願方向 / 想要的禮物類型
+                                    </div>
+                                    <p id="result-want-text" class="text-base sm:text-lg font-bold text-gray-800 whitespace-pre-line"></p>
+                                </div>
+
+                                <div class="bg-red-50 border-2 border-xmas-red text-gray-900 rounded-2xl p-4 shadow-md">
+                                    <div class="text-xs font-black text-xmas-red uppercase tracking-wider mb-1">
+                                        🚫 絕對地雷 / 不想要收到的（類型、顏色等）
+                                    </div>
+                                    <p id="result-avoid-text" class="text-base font-bold text-red-900 whitespace-pre-line"></p>
+                                </div>
+
+                                <div id="result-note-box" class="bg-amber-50 border border-amber-300 text-gray-900 rounded-2xl p-4 shadow-md">
+                                    <div class="text-xs font-black text-amber-800 uppercase tracking-wider mb-1">
+                                        💡 給聖誕小天使的暗示 / 備註
+                                    </div>
+                                    <p id="result-note-text" class="text-sm sm:text-base font-medium text-gray-800"></p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-white/20 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                <p class="text-xs text-emerald-200">
+                                    🔒 你的抽籤次數已鎖定（1/1）。請仔細記下對象與願望後再點擊確認按鈕！
+                                </p>
+                                <button type="button" onclick="hideDrawResult()"
+                                    class="w-full sm:w-auto px-6 py-3 rounded-xl bg-xmas-gold hover:bg-amber-400 text-xmas-forest text-sm sm:text-base font-black shadow-lg transform active:scale-95 transition">
+                                    ✅ 我已經確認好我要送禮的對象
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 底部測試與活動管理小工具列 -->
+        <footer class="mt-8 text-center text-emerald-100/80 text-xs space-y-3">
+            <p>🎄 聖誕快樂！願你們在 700-800 元的預算裡，挑選出最溫暖的心意 🎁</p>
+            <div class="inline-flex flex-wrap items-center justify-center gap-2 bg-black/25 backdrop-blur-sm px-4 py-2 rounded-2xl border border-white/10">
+                <button type="button" onclick="fillDemoWishes()" class="text-xmas-gold hover:underline font-bold px-2 py-1">
+                    🧪 模擬測試：一鍵幫另外兩人許願（測試密碼皆為 0000）
+                </button>
+                <span class="text-white/20">|</span>
+                <button type="button" onclick="openResetModal()" class="text-red-300 hover:underline font-bold px-2 py-1">
+                    🔄 重設整場活動（清空所有許願與抽籤）
+                </button>
+            </div>
+        </footer>
+    </main>
+
+    <!-- 自訂訊息提示彈窗 (取代 alert) -->
+    <div id="toast-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-xmas-gold transform transition-all">
+            <div id="toast-icon" class="text-4xl mb-2">🎄</div>
+            <h4 id="toast-title" class="text-lg font-black text-xmas-forest mb-1">提示</h4>
+            <p id="toast-message" class="text-sm text-gray-600 mb-5 leading-relaxed"></p>
+            <button type="button" onclick="closeToast()" class="w-full py-2.5 rounded-xl bg-xmas-forest hover:bg-xmas-pine text-white font-bold text-sm transition">
+                我知道了
+            </button>
+        </div>
+    </div>
+
+    <!-- 重設活動確認視窗 (取代 confirm) -->
+    <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl border-4 border-xmas-red">
+            <div class="text-4xl mb-2">⚠️</div>
+            <h4 class="text-lg font-black text-xmas-red mb-1">確定要重設整場活動嗎？</h4>
+            <p class="text-sm text-gray-600 mb-5 leading-relaxed">
+                這將會清空 <strong>鯰鯰、阿猛、泰迪</strong> 所有人的許願內容與抽籤配對紀錄，讓大家重新開始！
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" onclick="closeResetModal()" class="py-2.5 rounded-xl bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold text-sm transition">
+                    取消
+                </button>
+                <button type="button" onclick="confirmResetEvent()" class="py-2.5 rounded-xl bg-xmas-red hover:bg-red-700 text-white font-bold text-sm transition">
+                    確定清空重設
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 應用程式邏輯與雲端/本機雙模式儲存 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDocs, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 固定成員名單與對應圖示
+        const MEMBERS = ['鯰鯰', '阿猛', '泰迪'];
+        const MEMBER_ICONS = {
+            '鯰鯰': '🐟',
+            '阿猛': '🦁',
+            '泰迪': '🧸'
+        };
+
+        // 全域狀態管理
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let roomCollectionRef = null;
+        let useCloud = false;
+        let selectedDrawMember = null;
+
+        // 直接以三人名字綁定的資料結構，確保抽籤後 100% 穩定讀取對象與許願內容
+        let eventState = createInitialState();
+
+        function createInitialState() {
+            return {
+                members: {
+                    '鯰鯰': { wished: false, pin: '', want: '', avoid: '', note: '', drawn: false, targetMember: '' },
+                    '阿猛': { wished: false, pin: '', want: '', avoid: '', note: '', drawn: false, targetMember: '' },
+                    '泰迪': { wished: false, pin: '', want: '', avoid: '', note: '', drawn: false, targetMember: '' }
+                },
+                pairingLocked: false
+            };
+        }
+
+        // 將雲端集合中的各成員獨立文件整合成完整狀態（一人一份獨立文件，絕不互相覆蓋）
+        function applyCollectionDocsToState(querySnapshot) {
+            const nextState = createInitialState();
+            querySnapshot.forEach((docSnap) => {
+                const id = docSnap.id;
+                const data = docSnap.data();
+                if (id.startsWith('member_')) {
+                    const memberName = id.replace('member_', '');
+                    if (MEMBERS.includes(memberName) && data) {
+                        nextState.members[memberName] = {
+                            wished: Boolean(data.wished),
+                            pin: data.pin || '',
+                            want: data.want || '',
+                            avoid: data.avoid || '',
+                            note: data.note || '',
+                            drawn: Boolean(data.drawn),
+                            targetMember: data.targetMember || ''
+                        };
+                    }
+                } else if (id === 'meta_pairing' && data) {
+                    nextState.pairingLocked = Boolean(data.pairingLocked);
+                }
+            });
+            eventState = nextState;
+            renderUI();
+        }
+
+        // 初始化連線（驗證登入後主動讀取三人獨立文件，確保跨瀏覽器與重新整理皆確實保留紀錄）
+        async function initAppStorage() {
+            const statusEl = document.getElementById('sync-status-text');
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const app = initializeApp(firebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    currentUser = auth.currentUser;
+
+                    if (!currentUser) {
+                        throw new Error('Authentication failed');
+                    }
+
+                    useCloud = true;
+                    roomCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'xmas_exchange_trio_v3');
+
+                    // 1. 網頁開啟或重新整理時，優先主動讀取所有成員的獨立紀錄
+                    const initialSnap = await getDocs(roomCollectionRef);
+                    applyCollectionDocsToState(initialSnap);
+                    statusEl.textContent = '🟢 雲端資料庫已連線（不同瀏覽器、手機開啟或重整皆會同步保留）';
+
+                    // 2. 建立即時監聽，任何人在其他裝置許願或抽籤都會立刻同步
+                    onSnapshot(roomCollectionRef, (snapshot) => {
+                        applyCollectionDocsToState(snapshot);
+                    }, (error) => {
+                        console.warn('Firestore listener error:', error);
+                        statusEl.textContent = '🟡 雲端即時監聽暫時中斷，重新整理即可同步最新紀錄';
+                    });
+                    return;
+                }
+            } catch (err) {
+                console.warn('Cloud init fallback:', err);
+            }
+
+            useCloud = false;
+            statusEl.textContent = '⚠️ 目前環境未提供雲端資料庫連線（請使用系統正式分享連結以跨瀏覽器保存資料）';
+            renderUI();
+        }
+
+        // 儲存單一成員的獨立資料至雲端（不影響其他兩人的資料）
+        async function saveMemberRecord(memberName, recordData) {
+            eventState.members[memberName] = recordData;
+            renderUI();
+            if (useCloud && db && currentUser && roomCollectionRef) {
+                try {
+                    const memberDocRef = doc(roomCollectionRef, `member_${memberName}`);
+                    await setDoc(memberDocRef, recordData, { merge: true });
+                } catch (err) {
+                    console.error('Save member error:', err);
+                    showToast('⚠️', '雲端儲存失敗', '許願資料尚未成功寫入雲端，請檢查網路連線後再試一次！');
+                    throw err;
+                }
+            }
+        }
+
+        // 儲存全體配對結果（當三人皆許完願時寫入各自目標對象與鎖定狀態）
+        async function saveFullPairing(state) {
+            eventState = state;
+            renderUI();
+            if (useCloud && db && currentUser && roomCollectionRef) {
+                try {
+                    for (const memberName of MEMBERS) {
+                        const memberDocRef = doc(roomCollectionRef, `member_${memberName}`);
+                        await setDoc(memberDocRef, state.members[memberName], { merge: true });
+                    }
+                    const metaDocRef = doc(roomCollectionRef, 'meta_pairing');
+                    await setDoc(metaDocRef, { pairingLocked: state.pairingLocked }, { merge: true });
+                } catch (err) {
+                    console.error('Save pairing error:', err);
+                    showToast('⚠️', '配對寫入失敗', '無法同步抽籤配對至雲端，請稍後再試！');
+                    throw err;
+                }
+            }
+        }
+
+        // 三人無自環錯排 (Derangement)：確保形成閉環配對，絕不抽到自己、每人只被抽到一次
+        function ensureDerangementPairing(state) {
+            if (state.pairingLocked && MEMBERS.every(m => state.members[m].targetMember)) {
+                return;
+            }
+            // 三人錯排僅有兩種閉環：
+            // 0: 鯰鯰 -> 阿猛 -> 泰迪 -> 鯰鯰
+            // 1: 鯰鯰 -> 泰迪 -> 阿猛 -> 鯰鯰
+            const randomChoice = crypto.getRandomValues(new Uint32Array(1))[0] % 2;
+            if (randomChoice === 0) {
+                state.members['鯰鯰'].targetMember = '阿猛';
+                state.members['阿猛'].targetMember = '泰迪';
+                state.members['泰迪'].targetMember = '鯰鯰';
+            } else {
+                state.members['鯰鯰'].targetMember = '泰迪';
+                state.members['泰迪'].targetMember = '阿猛';
+                state.members['阿猛'].targetMember = '鯰鯰';
+            }
+            state.pairingLocked = true;
+        }
+
+        // 處理許願表單送出
+        window.handleWishSubmit = async function(e) {
+            e.preventDefault();
+            playBellSound();
+
+            const memberInput = document.querySelector('input[name="wish-member"]:checked');
+            if (!memberInput) {
+                showToast('🎅', '請先選擇你是誰', '請點選「鯰鯰」、「阿猛」或「泰迪」再送出願望喔！');
+                return;
+            }
+
+            const member = memberInput.value;
+            const pin = document.getElementById('wish-pin').value.trim();
+            const want = document.getElementById('wish-want').value.trim();
+            const avoid = document.getElementById('wish-avoid').value.trim();
+            const note = document.getElementById('wish-note').value.trim();
+
+            if (!/^\d{4}$/.test(pin)) {
+                showToast('🔢', '密碼格式不符', '請設定「4 位純數字」作為你的個人密碼！');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-wish-btn');
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-70');
+
+            try {
+                // 送出前先從雲端重新確認一次最新狀態，避免與其他瀏覽器同時操作衝突
+                if (useCloud && db && currentUser && roomCollectionRef) {
+                    const latestSnap = await getDocs(roomCollectionRef);
+                    applyCollectionDocsToState(latestSnap);
+                }
+
+                const nextState = JSON.parse(JSON.stringify(eventState));
+                const memberRecord = nextState.members[member];
+
+                // 若已經有人開始抽籤，鎖定不可修改願望
+                if (MEMBERS.some(m => nextState.members[m].drawn)) {
+                    showToast('🔒', '抽籤已開始', '已經有成員完成抽籤囉，為確保公平無法再修改願望！');
+                    return;
+                }
+
+                // 若該成員之前已許願，驗證原本的 4 位數密碼才能覆蓋修改
+                if (memberRecord.wished && memberRecord.pin !== pin) {
+                    showToast('🚫', '密碼驗證失敗', `「${member}」已經送出過願望了，若要修改內容，請輸入你當初設定的 4 位數密碼！`);
+                    return;
+                }
+
+                const updatedMemberRecord = {
+                    wished: true,
+                    pin,
+                    want,
+                    avoid,
+                    note: note || '無特別備註，交給聖誕小天使發揮！',
+                    drawn: false,
+                    targetMember: memberRecord.targetMember || ''
+                };
+
+                nextState.members[member] = updatedMemberRecord;
+
+                // 檢查是否三人都已完成許願 -> 若集滿 3 人，自動建立無自環配對並開放抽籤
+                const allWished = MEMBERS.every(m => nextState.members[m].wished);
+                if (allWished) {
+                    ensureDerangementPairing(nextState);
+                    await saveFullPairing(nextState);
+                } else {
+                    await saveMemberRecord(member, updatedMemberRecord);
+                }
+
+                document.getElementById('wish-form').reset();
+                document.getElementById('member-already-wished-hint').classList.add('hidden');
+
+                if (allWished) {
+                    showToast('🎉', '全員許願完成！', `太棒了！鯰鯰、阿猛、泰迪都已送出願望，現在可以進入「2. 聖誕交換抽籤區」進行抽籤囉！`);
+                    switchTab('draw');
+                } else {
+                    const count = MEMBERS.filter(m => nextState.members[m].wished).length;
+                    showToast('🎄', '願望已永久儲存！', `「${member}」的願望已寫入雲端並加入已許願名單（目前進度 ${count}/3 人），重新整理或換手機打開都不會消失！`);
+                }
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-70');
+            }
+        };
+
+        // 選擇許願成員時的提示
+        window.onWishMemberSelect = function(member) {
+            const hintEl = document.getElementById('member-already-wished-hint');
+            if (eventState.members[member]?.wished) {
+                hintEl.classList.remove('hidden');
+            } else {
+                hintEl.classList.add('hidden');
+            }
+        };
+
+        // 切換分頁
+        window.switchTab = function(tab) {
+            const wishSection = document.getElementById('section-wish');
+            const drawSection = document.getElementById('section-draw');
+            const tabWish = document.getElementById('tab-wish');
+            const tabDraw = document.getElementById('tab-draw');
+
+            if (tab === 'wish') {
+                wishSection.classList.remove('hidden');
+                drawSection.classList.add('hidden');
+                tabWish.className = 'py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 bg-white text-xmas-red shadow-md';
+                tabDraw.className = 'py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 text-white hover:bg-white/10';
+            } else {
+                wishSection.classList.add('hidden');
+                drawSection.classList.remove('hidden');
+                tabDraw.className = 'py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 bg-white text-xmas-red shadow-md';
+                tabWish.className = 'py-3 px-4 rounded-xl font-black text-sm sm:text-base transition-all flex items-center justify-center gap-2 text-white hover:bg-white/10';
+                hideDrawResult();
+            }
+        };
+
+        // 選擇抽籤成員
+        window.selectDrawMember = function(member) {
+            selectedDrawMember = member;
+            hideDrawResult();
+            document.getElementById('draw-pin-input').value = '';
+
+            MEMBERS.forEach(m => {
+                const btn = document.getElementById(`draw-btn-${m}`);
+                if (m === member) {
+                    btn.classList.add('border-xmas-red', 'bg-red-50', 'shadow-md');
+                    btn.classList.remove('border-gray-200', 'bg-white');
+                } else {
+                    btn.classList.remove('border-xmas-red', 'bg-red-50', 'shadow-md');
+                    btn.classList.add('border-gray-200', 'bg-white');
+                }
+            });
+
+            updateDrawAuthHeader(member);
+        };
+
+        // 更新驗證區塊標題與狀態標籤（不隱藏已開啟的結果卡片）
+        function updateDrawAuthHeader(member) {
+            const memberData = eventState.members[member];
+            const authBox = document.getElementById('draw-auth-box');
+            const titleEl = document.getElementById('draw-selected-title');
+            const badgeEl = document.getElementById('draw-once-badge');
+            const btnTextEl = document.getElementById('execute-draw-btn-text');
+
+            authBox.classList.remove('hidden');
+            titleEl.textContent = `驗證「${member}」的個人密碼：`;
+
+            if (memberData.drawn) {
+                badgeEl.textContent = '已完成抽籤（輸入密碼可重看結果）';
+                badgeEl.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800';
+                btnTextEl.textContent = '驗證密碼並查看我的抽籤結果';
+            } else {
+                badgeEl.textContent = '尚未抽籤（每人限抽一次）';
+                badgeEl.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-xmas-forest';
+                btnTextEl.textContent = '立即抽籤並查看對象';
+            }
+        }
+
+        // 執行抽籤或驗證查看結果（直接讀取對應成員名字與其願望內容）
+        window.executeOrRevealDraw = async function() {
+            if (!selectedDrawMember) return;
+
+            const pin = document.getElementById('draw-pin-input').value.trim();
+            if (!/^\d{4}$/.test(pin)) {
+                showToast('🔢', '請輸入 4 位數密碼', '請輸入你在許願時設定的 4 位數字個人密碼！');
+                return;
+            }
+
+            // 驗證前先同步一次最新雲端資料
+            if (useCloud && db && currentUser && roomCollectionRef) {
+                const latestSnap = await getDocs(roomCollectionRef);
+                applyCollectionDocsToState(latestSnap);
+            }
+
+            const memberRecord = eventState.members[selectedDrawMember];
+
+            if (pin !== memberRecord.pin) {
+                showToast('🚫', '密碼錯誤！', `這不是「${selectedDrawMember}」設定的 4 位數密碼喔，抽籤結果只有本人可以看！`);
+                return;
+            }
+
+            // 確保配對已建立並標記本人已完成抽籤
+            const nextState = JSON.parse(JSON.stringify(eventState));
+            ensureDerangementPairing(nextState);
+
+            const isFirstDraw = !nextState.members[selectedDrawMember].drawn;
+            if (isFirstDraw) {
+                nextState.members[selectedDrawMember].drawn = true;
+                await saveFullPairing(nextState);
+                playFanfareSound();
+            } else {
+                playBellSound();
+            }
+
+            // 直接取得抽中對象的完整資料
+            const targetName = nextState.members[selectedDrawMember].targetMember;
+            const targetData = nextState.members[targetName];
+
+            if (!targetName || !targetData) {
+                showToast('⚠️', '讀取異常', '尚未完成三人配對，請確認三人都已送出願望！');
+                return;
+            }
+
+            const targetIcon = MEMBER_ICONS[targetName] || '🎁';
+            document.getElementById('result-target-name').textContent = `${targetIcon} ${targetName}`;
+            document.getElementById('result-want-text').textContent = targetData.want;
+            document.getElementById('result-avoid-text').textContent = targetData.avoid;
+            document.getElementById('result-note-text').textContent = targetData.note;
+
+            const resultCard = document.getElementById('draw-result-card');
+            resultCard.classList.remove('hidden');
+            document.getElementById('draw-pin-input').value = '';
+            updateDrawAuthHeader(selectedDrawMember);
+            resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        };
+
+        // 隱藏抽籤結果防偷看（僅在使用者點擊「我已經確認好我要送禮的對象」或切換成員時觸發）
+        window.hideDrawResult = function() {
+            document.getElementById('draw-result-card').classList.add('hidden');
+        };
+
+        // 更新整體 UI 畫面（包含「已許願名單」與「已抽籤名單」）
+        function renderUI() {
+            let wishedCount = 0;
+            let drawnCount = 0;
+
+            MEMBERS.forEach(member => {
+                const status = eventState.members[member];
+                
+                // 更新「已許願名單」列
+                const wishRow = document.getElementById(`wish-row-${member}`);
+                const wishBadge = document.getElementById(`wish-badge-${member}`);
+                if (status.wished) {
+                    wishedCount++;
+                    wishRow.className = 'flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border-2 border-xmas-pine shadow-2xs';
+                    wishBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-xmas-pine text-white';
+                    wishBadge.textContent = '✅ 已許願';
+                } else {
+                    wishRow.className = 'flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs';
+                    wishBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500';
+                    wishBadge.textContent = '⏳ 許願中';
+                }
+
+                // 更新「已抽籤名單」列
+                const drawRow = document.getElementById(`draw-row-${member}`);
+                const drawBadge = document.getElementById(`draw-badge-${member}`);
+                if (status.drawn) {
+                    drawnCount++;
+                    drawRow.className = 'flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border-2 border-xmas-red shadow-2xs';
+                    drawBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-xmas-red text-white';
+                    drawBadge.textContent = '🎉 已完成抽籤';
+                } else {
+                    drawRow.className = 'flex items-center justify-between bg-white px-3.5 py-2.5 rounded-xl border border-gray-200 shadow-2xs';
+                    drawBadge.className = 'text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500';
+                    drawBadge.textContent = '🔒 尚未抽籤';
+                }
+
+                // 更新抽籤區按鈕下方小標籤
+                const drawTagEl = document.getElementById(`draw-tag-${member}`);
+                if (drawTagEl) {
+                    if (status.drawn) {
+                        drawTagEl.textContent = '🎉 已完成抽籤';
+                        drawTagEl.className = 'mt-1 text-[11px] font-bold text-xmas-red';
+                    } else {
+                        drawTagEl.textContent = '🎁 可進行抽籤';
+                        drawTagEl.className = 'mt-1 text-[11px] font-bold text-emerald-600';
+                    }
+                }
+            });
+
+            const progressBadge = document.getElementById('wish-progress-badge');
+            progressBadge.textContent = `許願進度：${wishedCount} / 3 人`;
+
+            const drawProgressBadge = document.getElementById('draw-progress-badge');
+            drawProgressBadge.textContent = `${drawnCount} / 3 已抽`;
+
+            const lockedPanel = document.getElementById('draw-locked-panel');
+            const unlockedPanel = document.getElementById('draw-unlocked-panel');
+
+            if (wishedCount === 3) {
+                progressBadge.className = 'bg-xmas-pine text-white text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full shadow-sm';
+                lockedPanel.classList.add('hidden');
+                unlockedPanel.classList.remove('hidden');
+            } else {
+                progressBadge.className = 'bg-xmas-forest text-white text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full shadow-sm';
+                lockedPanel.classList.remove('hidden');
+                unlockedPanel.classList.add('hidden');
+            }
+        }
+
+        // 一鍵演示模式：幫尚未許願的朋友填入模擬願望（預設密碼皆為 0000）
+        window.fillDemoWishes = async function() {
+            const sampleWishes = [
+                {
+                    want: '質感木質調擴香瓶或香氛蠟燭、冬季保暖針織圍巾（大地色系）',
+                    avoid: '不要馬克杯、不要亮粉紅色、不要太甜的巧克力或糖果',
+                    note: '最近工作有點忙，想要回家能放鬆療癒的小物！'
+                },
+                {
+                    want: '桌面實用 3C 充電小物（例如磁吸行動電源或無線充電座）、精品濾掛咖啡禮盒',
+                    avoid: '不要絨毛娃娃、不要花香調香水、不要裝飾擺設品',
+                    note: '實用派萬歲！每天都能用到的東西最棒了～'
+                },
+                {
+                    want: '日式手工餅乾鐵盒、質感保溫隨行杯（黑、白或軍綠色）',
+                    avoid: '不要護手霜（家裡還有很多）、不要有大圖案的衣服或襪子',
+                    note: '吃貨本色，好吃又有儀式感的小禮盒我會超開心！'
+                }
+            ];
+
+            const nextState = JSON.parse(JSON.stringify(eventState));
+            let addedCount = 0;
+
+            for (let i = 0; i < MEMBERS.length; i++) {
+                const member = MEMBERS[i];
+                if (!nextState.members[member].wished) {
+                    nextState.members[member] = {
+                        wished: true,
+                        pin: '0000',
+                        want: sampleWishes[i].want,
+                        avoid: sampleWishes[i].avoid,
+                        note: sampleWishes[i].note,
+                        drawn: false,
+                        targetMember: ''
+                    };
+                    addedCount++;
+                }
+            }
+
+            if (addedCount === 0) {
+                showToast('ℹ️', '全員都已許願', '目前三位成員都已經完成許願囉！若要重新測試，請點擊右側「重設整場活動」。');
+                return;
+            }
+
+            if (MEMBERS.every(m => nextState.members[m].wished)) {
+                ensureDerangementPairing(nextState);
+            }
+
+            await saveFullPairing(nextState);
+            playBellSound();
+            showToast('🧪', '模擬許願已填入', `已自動為尚未許願的成員填入模擬願望（預設測試密碼為 0000），現在可以直接前往「2. 聖誕交換抽籤區」抽籤並查看對象囉！`);
+        };
+
+        // 重設活動視窗控制
+        window.openResetModal = function() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+            document.getElementById('reset-modal').classList.add('flex');
+        };
+        window.closeResetModal = function() {
+            document.getElementById('reset-modal').classList.add('hidden');
+            document.getElementById('reset-modal').classList.remove('flex');
+        };
+        window.confirmResetEvent = async function() {
+            closeResetModal();
+            selectedDrawMember = null;
+            hideDrawResult();
+            document.getElementById('draw-auth-box').classList.add('hidden');
+            document.getElementById('wish-form').reset();
+            await saveFullPairing(createInitialState());
+            switchTab('wish');
+            showToast('🔄', '活動已重設', '所有許願資料與抽籤紀錄皆已清空，可以重新開始新一輪的聖誕交換禮物啦！');
+        };
+
+        // 自訂提示框控制
+        window.showToast = function(icon, title, message) {
+            document.getElementById('toast-icon').textContent = icon;
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-message').textContent = message;
+            const modal = document.getElementById('toast-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+        window.closeToast = function() {
+            const modal = document.getElementById('toast-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        };
+
+        // Tone.js 聖誕鈴鐺音效（純合成，無外部音檔依賴）
+        function playBellSound() {
+            try {
+                if (typeof Tone !== 'undefined') {
+                    const synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'sine' },
+                        envelope: { attack: 0.01, decay: 0.4, sustain: 0.1, release: 0.8 }
+                    }).toDestination();
+                    synth.volume.value = -12;
+                    const now = Tone.now();
+                    synth.triggerAttackRelease('E5', '8n', now);
+                    synth.triggerAttackRelease('G5', '8n', now + 0.1);
+                }
+            } catch (e) {}
+        }
+
+        function playFanfareSound() {
+            try {
+                if (typeof Tone !== 'undefined') {
+                    const synth = new Tone.PolySynth(Tone.Synth, {
+                        oscillator: { type: 'triangle' },
+                        envelope: { attack: 0.02, decay: 0.5, sustain: 0.2, release: 1.0 }
+                    }).toDestination();
+                    synth.volume.value = -10;
+                    const now = Tone.now();
+                    synth.triggerAttackRelease('C5', '8n', now);
+                    synth.triggerAttackRelease('E5', '8n', now + 0.12);
+                    synth.triggerAttackRelease('G5', '8n', now + 0.24);
+                    synth.triggerAttackRelease('C6', '4n', now + 0.36);
+                }
+            } catch (e) {}
+        }
+
+        // 背景飄雪動畫 Canvas
+        function initSnowCanvas() {
+            const canvas = document.getElementById('snow-canvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const flakes = Array.from({ length: 55 }, () => ({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                r: Math.random() * 3.5 + 1.5,
+                d: Math.random() * 1 + 0.5,
+                sway: Math.random() * Math.PI * 2
+            }));
+
+            function drawSnow() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                ctx.beginPath();
+                for (let f of flakes) {
+                    ctx.moveTo(f.x, f.y);
+                    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+                }
+                ctx.fill();
+
+                for (let f of flakes) {
+                    f.y += f.d;
+                    f.sway += 0.015;
+                    f.x += Math.sin(f.sway) * 0.6;
+                    if (f.y > height) {
+                        f.y = -5;
+                        f.x = Math.random() * width;
+                    }
+                }
+                requestAnimationFrame(drawSnow);
+            }
+            drawSnow();
+        }
+
+        // 啟動應用程式
+        window.addEventListener('DOMContentLoaded', () => {
+            initSnowCanvas();
+            initAppStorage();
+        });
+    </script>
+</body>
+</html>
